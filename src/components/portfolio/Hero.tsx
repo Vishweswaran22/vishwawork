@@ -87,7 +87,7 @@ export function Hero() {
                 alt="Portrait of S Vishweswaran, Full Stack Developer"
                 width={369}
                 height={800}
-                className="h-full w-full object-cover object-top"
+                className="h-full w-full scale-125 object-cover object-[50%_12%]"
               />
 
             </div>

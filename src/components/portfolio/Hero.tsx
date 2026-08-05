@@ -85,9 +85,9 @@ export function Hero() {
               <img
                 src={profileImg}
                 alt="Portrait of S Vishweswaran, Full Stack Developer"
-                width={369}
+                width={561}
                 height={800}
-                className="h-full w-full scale-125 object-cover object-[50%_12%]"
+                className="h-full w-full scale-110 object-cover object-[50%_18%]"
               />
 
             </div>

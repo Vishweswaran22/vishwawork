@@ -99,3 +99,11 @@ export const SERVICES = [
     text: "Develop scalable backend systems using Java, Spring Boot, SQL, and MySQL.",
   },
 ] as const;
+
+// EmailJS config — these three values are publishable and safe in frontend code.
+// Get them at https://dashboard.emailjs.com (Email Services / Email Templates / Account).
+export const EMAILJS = {
+  serviceId: "",
+  templateId: "",
+  publicKey: "",
+};

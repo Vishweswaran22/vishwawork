@@ -21,9 +21,11 @@ import {
   Send,
   Server,
 } from "lucide-react";
+import emailjs from "@emailjs/browser";
 import { toast } from "sonner";
+import { z } from "zod";
 import projectImg from "@/assets/project-attendance.jpg";
-import { EDUCATION, PROFILE, SERVICES, SKILL_GROUPS, STATS } from "./data";
+import { EDUCATION, EMAILJS, PROFILE, SERVICES, SKILL_GROUPS, STATS } from "./data";
 import { useCountUp, useReveal } from "./hooks";
 import { Reveal, Section } from "./Section";
 
@@ -355,8 +357,21 @@ const DETAILS = [
   { icon: Linkedin, label: "LinkedIn", value: "in/vishweswarans", href: PROFILE.linkedin },
 ];
 
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Please enter your name").max(100, "Name is too long"),
+  email: z.string().trim().email("Please enter a valid email").max(255, "Email is too long"),
+  subject: z.string().trim().min(1, "Please enter a subject").max(150, "Subject is too long"),
+  message: z.string().trim().min(1, "Please enter a message").max(1000, "Message is too long"),
+});
+
+type FieldErrors = Partial<Record<keyof z.infer<typeof contactSchema>, string>>;
+
+const fieldClass =
+  "rounded-xl border border-input bg-secondary/50 px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/25";
+
 export function Contact() {
   const [sending, setSending] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   return (
     <Section
@@ -409,55 +424,103 @@ export function Contact() {
         <Reveal delay={120} className="glass rounded-3xl p-7 md:p-9">
           <form
             className="grid gap-4"
-            onSubmit={(e) => {
+            noValidate
+            onSubmit={async (e) => {
               e.preventDefault();
+              const form = e.currentTarget;
+              const fd = new FormData(form);
+
+              // Honeypot: bots fill this hidden field, humans never see it.
+              if (String(fd.get("company") ?? "").trim() !== "") return;
+
+              const parsed = contactSchema.safeParse({
+                name: fd.get("name"),
+                email: fd.get("email"),
+                subject: fd.get("subject"),
+                message: fd.get("message"),
+              });
+
+              if (!parsed.success) {
+                const next: FieldErrors = {};
+                for (const issue of parsed.error.issues) {
+                  const key = issue.path[0] as keyof FieldErrors;
+                  if (key && !next[key]) next[key] = issue.message;
+                }
+                setErrors(next);
+                return;
+              }
+              setErrors({});
+
+              if (!EMAILJS.serviceId || !EMAILJS.templateId || !EMAILJS.publicKey) {
+                toast.error("Email sending isn't configured yet.", {
+                  description: `Please email me directly at ${PROFILE.email}.`,
+                });
+                return;
+              }
+
               setSending(true);
-              setTimeout(() => {
+              try {
+                await emailjs.send(
+                  EMAILJS.serviceId,
+                  EMAILJS.templateId,
+                  {
+                    from_name: parsed.data.name,
+                    from_email: parsed.data.email,
+                    subject: parsed.data.subject,
+                    message: parsed.data.message,
+                  },
+                  { publicKey: EMAILJS.publicKey },
+                );
+                form.reset();
+                toast.success("Thanks! Your message has been sent.");
+              } catch {
+                toast.error("Message couldn't be sent.", {
+                  description: `Please email me directly at ${PROFILE.email}.`,
+                });
+              } finally {
                 setSending(false);
-                (e.target as HTMLFormElement).reset();
-                toast.success("Thanks! Your message has been noted.");
-              }, 700);
+              }
             }}
           >
+            <input
+              type="text"
+              name="company"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="absolute h-0 w-0 opacity-0"
+/>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-xs font-medium">
                 Name
-                <input
-                  required
-                  name="name"
-                  placeholder="Your name"
-                  className="rounded-xl border border-input bg-secondary/50 px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/25"
-                />
+                <input name="name" placeholder="Your name" className={fieldClass} />
+                {errors.name && <span className="text-xs text-destructive">{errors.name}</span>}
               </label>
               <label className="grid gap-2 text-xs font-medium">
                 Email
                 <input
-                  required
                   type="email"
                   name="email"
                   placeholder="you@example.com"
-                  className="rounded-xl border border-input bg-secondary/50 px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/25"
+                  className={fieldClass}
                 />
+                {errors.email && <span className="text-xs text-destructive">{errors.email}</span>}
               </label>
             </div>
             <label className="grid gap-2 text-xs font-medium">
               Subject
-              <input
-                required
-                name="subject"
-                placeholder="What is this about?"
-                className="rounded-xl border border-input bg-secondary/50 px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/25"
-              />
+              <input name="subject" placeholder="What is this about?" className={fieldClass} />
+              {errors.subject && <span className="text-xs text-destructive">{errors.subject}</span>}
             </label>
             <label className="grid gap-2 text-xs font-medium">
               Message
               <textarea
-                required
                 name="message"
                 rows={6}
                 placeholder="Tell me about your project or role..."
-                className="resize-none rounded-xl border border-input bg-secondary/50 px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/25"
+                className={`resize-none ${fieldClass}`}
               />
+              {errors.message && <span className="text-xs text-destructive">{errors.message}</span>}
             </label>
             <button
               type="submit"
@@ -468,6 +531,7 @@ export function Contact() {
             </button>
           </form>
         </Reveal>
+
       </div>
     </Section>
   );

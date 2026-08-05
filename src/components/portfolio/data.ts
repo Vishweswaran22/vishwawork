@@ -103,7 +103,7 @@ export const SERVICES = [
 // EmailJS config — these three values are publishable and safe in frontend code.
 // Get them at https://dashboard.emailjs.com (Email Services / Email Templates / Account).
 export const EMAILJS = {
-  serviceId: "",
-  templateId: "",
-  publicKey: "",
+  serviceId: "service_mm6gdff",
+  templateId: "template_dd09kql",
+  publicKey: "BXzJu-LDjaBlsPhHl",
 };

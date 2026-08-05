@@ -355,8 +355,21 @@ const DETAILS = [
   { icon: Linkedin, label: "LinkedIn", value: "in/vishweswarans", href: PROFILE.linkedin },
 ];
 
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Please enter your name").max(100, "Name is too long"),
+  email: z.string().trim().email("Please enter a valid email").max(255, "Email is too long"),
+  subject: z.string().trim().min(1, "Please enter a subject").max(150, "Subject is too long"),
+  message: z.string().trim().min(1, "Please enter a message").max(1000, "Message is too long"),
+});
+
+type FieldErrors = Partial<Record<keyof z.infer<typeof contactSchema>, string>>;
+
+const fieldClass =
+  "rounded-xl border border-input bg-secondary/50 px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/25";
+
 export function Contact() {
   const [sending, setSending] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   return (
     <Section

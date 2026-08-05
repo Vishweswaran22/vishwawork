@@ -21,9 +21,11 @@ import {
   Send,
   Server,
 } from "lucide-react";
+import emailjs from "@emailjs/browser";
 import { toast } from "sonner";
+import { z } from "zod";
 import projectImg from "@/assets/project-attendance.jpg";
-import { EDUCATION, PROFILE, SERVICES, SKILL_GROUPS, STATS } from "./data";
+import { EDUCATION, EMAILJS, PROFILE, SERVICES, SKILL_GROUPS, STATS } from "./data";
 import { useCountUp, useReveal } from "./hooks";
 import { Reveal, Section } from "./Section";
 
